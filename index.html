@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Budget Calculator Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2d3748;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .header-stat {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .header-stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .header-stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+        }
+        
+        .card.spending { border-left-color: #ef4444; }
+        .card.income { border-left-color: #10b981; }
+        .card.balance { border-left-color: #3b82f6; }
+        .card.budget { border-left-color: #f59e0b; }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            color: #6b7280;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-icon {
+            font-size: 1.5em;
+        }
+        
+        .card-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .card-info {
+            color: #9ca3af;
+            font-size: 0.9em;
+        }
+        
+        .budget-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .budget-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .budget-item.zero-spending {
+            opacity: 0.6;
+            background: #f9fafb;
+        }
+        
+        .budget-item {
+            padding: 20px;
+            border: 2px solid #f3f4f6;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .budget-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+        
+        .budget-item.over-budget {
+            border-color: #fca5a5;
+            background: #fef2f2;
+        }
+        
+        .budget-item.warning {
+            border-color: #fcd34d;
+            background: #fffbeb;
+        }
+        
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .budget-bank {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bank-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .bank-name {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .budget-amounts {
+            display: flex;
+            gap: 30px;
+            font-size: 0.95em;
+        }
+        
+        .amount-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .amount-label {
+            color: #6b7280;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+        }
+        
+        .amount-value {
+            font-weight: 600;
+        }
+        
+        .progress-container {
+            margin-top: 15px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+        
+        .alert-danger {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+        
+        .transactions-table {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-credit {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-debit {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.2em;
+            color: #6b7280;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .budget-amounts {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">Loading your budget data...</div>
+    </div>
+
+    <script>
+        const DATA_ENDPOINT = 'https://n8n-production-fa2d.up.railway.app/webhook/dashboard-data';
+        const VERSION = 'v2.1'; // Increment this to force Safari to reload
+        const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#06b6d4', '#f59e0b'];
+        
+        let budgetData = {
+            // Total budget: 49000 (all on HDFC)
+            'HDFC': 49000,
+            'ICICI': 0,
+            'HDFC CC': 0,
+            'ICICI CC': 0,
+            'YES CC': 0
+        };
+        
+        // Load saved budgets from localStorage
+        const savedBudgets = localStorage.getItem('bankBudgets');
+        if (savedBudgets) {
+            budgetData = JSON.parse(savedBudgets);
+        }
+        
+        // Ensure all banks have a budget entry (even if zero)
+        const allBanksList = ['HDFC', 'ICICI', 'HDFC CC', 'ICICI CC', 'YES CC'];
+        allBanksList.forEach(bank => {
+            if (!budgetData[bank]) {
+                budgetData[bank] = 0;
+            }
+        });
+
+        async function loadData() {
+            try {
+                // Add multiple cache-busting parameters for Safari mobile
+                const cacheBuster = `?v=${VERSION}&t=${Date.now()}&r=${Math.random()}`;
+                const response = await fetch(DATA_ENDPOINT + cacheBuster, {
+                    cache: 'no-store',
+                    mode: 'cors',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                displayDashboard(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Show dashboard with zero values instead of error
+                const emptyData = {
+                    summary: {
+                        totalSpending: 0,
+                        totalIncome: 0,
+                        netBalance: 0,
+                        transactionCount: 0,
+                        debitCount: 0,
+                        creditCount: 0
+                    },
+                    spendingByBank: [],
+                    allTransactions: [],
+                    timestamp: new Date().toISOString()
+                };
+                displayDashboard(emptyData);
+                
+                // Show a detailed error notice with diagnostics
+                const notice = document.createElement('div');
+                notice.style.cssText = 'background: #fef3c7; border: 2px solid #fbbf24; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.95em;';
+                notice.innerHTML = `
+                    <strong>⚠️ Could not load data from server</strong>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Endpoint:</strong> ${DATA_ENDPOINT}<br>
+                        <strong>Device:</strong> ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}<br>
+                        <strong>Time:</strong> ${new Date().toLocaleTimeString('en-IN')}
+                    </div>
+                    <button onclick="loadData()" style="margin-top: 10px; padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                        🔄 Retry Loading
+                    </button>
+                `;
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.insertBefore(notice, container.firstChild);
+                }
+            }
+        }
+
+        function displayDashboard(data) {
+            const { summary, spendingByBank, allTransactions } = data;
+            
+            // Define all banks that should be shown
+            const allBanks = ['HDFC', 'ICICI', 'HDFC CC', 'ICICI CC', 'YES CC'];
+            
+            // Create a map of actual spending
+            const spendingMap = {};
+            spendingByBank.forEach(bank => {
+                spendingMap[bank.bank] = bank.spending;
+            });
+            
+            // Merge all banks with actual data
+            const completeSpendingByBank = allBanks.map((bankName, idx) => ({
+                bank: bankName,
+                spending: spendingMap[bankName] || 0,
+                percentage: 0 // Will calculate after
+            }));
+            
+            // Recalculate percentages based on total spending
+            const actualTotalSpending = summary.totalSpending || 0.01; // Avoid division by zero
+            completeSpendingByBank.forEach(bank => {
+                bank.percentage = actualTotalSpending > 0 
+                    ? Math.round((bank.spending / actualTotalSpending) * 100 * 100) / 100 
+                    : 0;
+            });
+            
+            // Sort by spending (highest first), but keep banks with zero at the end
+            completeSpendingByBank.sort((a, b) => {
+                if (a.spending === 0 && b.spending === 0) return 0;
+                if (a.spending === 0) return 1;
+                if (b.spending === 0) return -1;
+                return b.spending - a.spending;
+            });
+            
+            // Calculate total budget
+            const totalBudget = Object.values(budgetData).reduce((sum, val) => sum + val, 0);
+            const budgetRemaining = totalBudget - summary.totalSpending;
+            const budgetUsedPercent = totalBudget > 0 ? (summary.totalSpending / totalBudget * 100).toFixed(1) : 0;
+
+            // Build budget items (now showing all banks)
+            const budgetItems = completeSpendingByBank.map((bank, idx) => {
+                const budget = budgetData[bank.bank] || 0;
+                const spent = bank.spending;
+                const remaining = budget - spent;
+                const percentUsed = budget > 0 ? (spent / budget * 100) : 0;
+                
+                let statusClass = '';
+                let statusAlert = '';
+                let progressClass = '';
+                
+                // Check if bank has zero spending
+                const isZeroSpending = spent === 0;
+                if (isZeroSpending) {
+                    statusClass = 'zero-spending';
+                } else if (percentUsed > 100) {
+                    statusClass = 'over-budget';
+                    statusAlert = `<div class="alert alert-danger">⚠️ Over budget by ₹${Math.abs(remaining).toLocaleString('en-IN')}!</div>`;
+                    progressClass = 'danger';
+                } else if (percentUsed > 80) {
+                    statusClass = 'warning';
+                    statusAlert = `<div class="alert alert-warning">⚡ ${(100 - percentUsed).toFixed(0)}% budget remaining</div>`;
+                    progressClass = 'warning';
+                }
+                
+                return `
+                    <div class="budget-item ${statusClass}">
+                        <div class="budget-header">
+                            <div class="budget-bank">
+                                <span class="bank-dot" style="background: ${COLORS[idx % COLORS.length]}"></span>
+                                <span class="bank-name">${bank.bank}</span>
+                                ${isZeroSpending ? '<span style="color: #9ca3af; font-size: 0.85em; margin-left: 8px;">(No activity)</span>' : ''}
+                            </div>
+                            <div class="budget-amounts">
+                                <div class="amount-item">
+                                    <span class="amount-label">Budget</span>
+                                    <span class="amount-value">₹${budget.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div class="amount-item">
+                                    <span class="amount-label">Spent</span>
+                                    <span class="amount-value" style="color: #ef4444;">₹${spent.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div class="amount-item">
+                                    <span class="amount-label">Remaining</span>
+                                    <span class="amount-value" style="color: ${remaining >= 0 ? '#10b981' : '#ef4444'};">₹${Math.abs(remaining).toLocaleString('en-IN')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-header">
+                                <span>${isZeroSpending ? '0% used' : percentUsed.toFixed(1) + '% used'}</span>
+                                <span>${isZeroSpending ? '100% available' : Math.max(0, 100 - percentUsed).toFixed(1) + '% left'}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${progressClass}" style="width: ${Math.min(percentUsed, 100)}%"></div>
+                            </div>
+                        </div>
+                        ${statusAlert}
+                    </div>
+                `;
+            }).join('');
+
+            // Build transactions table
+            const transactionRows = allTransactions.slice(-15).reverse().map(txn => `
+                <tr>
+                    <td>${txn.Date}</td>
+                    <td><strong>${txn.Source}</strong></td>
+                    <td>${txn.Description}</td>
+                    <td style="text-align: right; font-weight: 600; color: ${txn.Type === 'Credit' ? '#10b981' : '#ef4444'};">
+                        ₹${txn.Amount.toLocaleString('en-IN')}
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge ${txn.Type === 'Credit' ? 'badge-credit' : 'badge-debit'}">
+                            ${txn.Type}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('app').innerHTML = `
+                <div class="container">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1>💰 Budget Calculator</h1>
+                        <p style="opacity: 0.9; margin-bottom: 5px;">Track your spending and stay within budget</p>
+                        <p style="opacity: 0.7; font-size: 0.85em;">Dashboard ${VERSION} • Always fresh data</p>
+                        <div class="header-stats">
+                            <div class="header-stat">
+                                <div class="header-stat-label">Total Budget</div>
+                                <div class="header-stat-value">₹${totalBudget.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div class="header-stat">
+                                <div class="header-stat-label">Total Spent</div>
+                                <div class="header-stat-value">₹${summary.totalSpending.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div class="header-stat">
+                                <div class="header-stat-label">Remaining</div>
+                                <div class="header-stat-value" style="color: ${budgetRemaining >= 0 ? '#a7f3d0' : '#fca5a5'};">
+                                    ₹${Math.abs(budgetRemaining).toLocaleString('en-IN')}
+                                </div>
+                            </div>
+                            <div class="header-stat">
+                                <div class="header-stat-label">Budget Used</div>
+                                <div class="header-stat-value">${budgetUsedPercent}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-cards">
+                        <div class="card spending">
+                            <div class="card-header">
+                                <span class="card-title">Total Spending</span>
+                                <span class="card-icon">💸</span>
+                            </div>
+                            <div class="card-value">₹${summary.totalSpending.toLocaleString('en-IN')}</div>
+                            <div class="card-info">${summary.debitCount} transactions</div>
+                        </div>
+
+                        <div class="card income">
+                            <div class="card-header">
+                                <span class="card-title">Total Income</span>
+                                <span class="card-icon">💵</span>
+                            </div>
+                            <div class="card-value">₹${summary.totalIncome.toLocaleString('en-IN')}</div>
+                            <div class="card-info">${summary.creditCount} transactions</div>
+                        </div>
+
+                        <div class="card balance">
+                            <div class="card-header">
+                                <span class="card-title">Net Balance</span>
+                                <span class="card-icon">💰</span>
+                            </div>
+                            <div class="card-value">₹${Math.abs(summary.netBalance).toLocaleString('en-IN')}</div>
+                            <div class="card-info">${summary.netBalance >= 0 ? 'Surplus' : 'Deficit'}</div>
+                        </div>
+
+                        <div class="card budget">
+                            <div class="card-header">
+                                <span class="card-title">Budget Health</span>
+                                <span class="card-icon">${budgetUsedPercent > 100 ? '🔴' : budgetUsedPercent > 80 ? '🟡' : '🟢'}</span>
+                            </div>
+                            <div class="card-value">${budgetUsedPercent}%</div>
+                            <div class="card-info">${budgetUsedPercent > 100 ? 'Over budget!' : budgetUsedPercent > 80 ? 'Close to limit' : 'On track'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Budget Tracking Section -->
+                    <div class="budget-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Bank-wise Budget Tracking</h2>
+                            <div class="budget-controls">
+                                <button class="btn btn-primary" onclick="openManualEntryModal()">➕ Add Transaction</button>
+                                <button class="btn btn-primary" onclick="openBudgetModal()">⚙️ Set Budgets</button>
+                                <button class="btn btn-secondary" onclick="testConnection()">🔌 Test Connection</button>
+                                <button class="btn btn-secondary" onclick="loadData()">🔄 Refresh</button>
+                            </div>
+                        </div>
+                        ${budgetItems}
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="transactions-table">
+                        <h2 class="section-title" style="margin-bottom: 20px;">Recent Transactions</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Bank</th>
+                                    <th>Description</th>
+                                    <th style="text-align: right;">Amount</th>
+                                    <th style="text-align: center;">Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${transactionRows}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="text-align: center; color: #9ca3af; margin-top: 30px; font-size: 0.9em;">
+                        Last updated: ${new Date(data.timestamp).toLocaleString('en-IN')} • Auto-refreshes every 30 seconds
+                        <br><span style="font-size: 0.85em; opacity: 0.7;">Page loaded: ${new Date().toLocaleTimeString('en-IN')}</span>
+                    </p>
+                </div>
+
+                <!-- Budget Modal -->
+                <div id="budgetModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">Set Monthly Budgets</div>
+                        <div id="budgetForm"></div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="saveBudgets()">💾 Save Budgets</button>
+                            <button class="btn btn-secondary" onclick="closeBudgetModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Entry Modal -->
+                <div id="manualEntryModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">Add Transaction via Message</div>
+                        <form id="manualEntryForm" onsubmit="submitManualEntry(event)">
+                            <div class="form-group">
+                                <label class="form-label">Transaction Message *</label>
+                                <textarea class="form-input" id="manual-message" rows="5" placeholder="Paste or type your transaction message here..." required></textarea>
+                                <div style="margin-top: 10px; padding: 12px; background: #f0f9ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 0.9em; color: #1e40af;">
+                                    <strong>💡 Examples:</strong><br>
+                                    • Rs 500 debited from A/C XX1234 on 02-Nov-25<br>
+                                    • INR 1,250.00 credited to account 5235 on 01-11-25<br>
+                                    • Rs 450 spent using HDFC Card XX2329 on 02-Nov-25
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bank/Source (Optional)</label>
+                                <select class="form-input" id="manual-source">
+                                    <option value="">Auto-detect from message</option>
+                                    <option value="HDFC">HDFC</option>
+                                    <option value="ICICI">ICICI</option>
+                                    <option value="HDFC CC">HDFC CC</option>
+                                    <option value="ICICI CC">ICICI CC</option>
+                                    <option value="YES CC">YES CC</option>
+                                </select>
+                            </div>
+                            <div id="manualEntryError" style="color: #ef4444; margin-bottom: 15px; display: none;"></div>
+                            <div id="manualEntrySuccess" style="color: #10b981; margin-bottom: 15px; display: none;"></div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">💾 Add Transaction</button>
+                                <button type="button" class="btn btn-secondary" onclick="closeManualEntryModal()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openBudgetModal() {
+            const modal = document.getElementById('budgetModal');
+            const form = document.getElementById('budgetForm');
+            
+            // Show all banks in order
+            const allBanksList = ['HDFC', 'ICICI', 'HDFC CC', 'ICICI CC', 'YES CC'];
+            
+            const formHTML = allBanksList.map(bank => `
+                <div class="form-group">
+                    <label class="form-label">${bank}</label>
+                    <input type="number" class="form-input" id="budget-${bank}" value="${budgetData[bank] || 0}" placeholder="Enter monthly budget">
+                </div>
+            `).join('');
+            
+            form.innerHTML = formHTML;
+            modal.classList.add('active');
+        }
+
+        function closeBudgetModal() {
+            document.getElementById('budgetModal').classList.remove('active');
+        }
+
+        function saveBudgets() {
+            const allBanksList = ['HDFC', 'ICICI', 'HDFC CC', 'ICICI CC', 'YES CC'];
+            
+            allBanksList.forEach(bank => {
+                const input = document.getElementById(`budget-${bank}`);
+                if (input) {
+                    budgetData[bank] = parseFloat(input.value) || 0;
+                }
+            });
+            
+            localStorage.setItem('bankBudgets', JSON.stringify(budgetData));
+            closeBudgetModal();
+            loadData(); // Reload dashboard with new budgets
+        }
+
+        function openManualEntryModal() {
+            const modal = document.getElementById('manualEntryModal');
+            // Clear form
+            document.getElementById('manualEntryForm').reset();
+            document.getElementById('manualEntryError').style.display = 'none';
+            document.getElementById('manualEntrySuccess').style.display = 'none';
+            modal.classList.add('active');
+        }
+
+        function closeManualEntryModal() {
+            document.getElementById('manualEntryModal').classList.remove('active');
+        }
+
+        async function testConnection() {
+            const cacheBuster = `?t=${Date.now()}`;
+            const testUrl = DATA_ENDPOINT + cacheBuster;
+            
+            alert('Testing connection to:\n' + DATA_ENDPOINT + '\n\nPlease wait...');
+            
+            try {
+                const response = await fetch(testUrl, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ Connection successful!\n\n' +
+                          'Status: ' + response.status + '\n' +
+                          'Transactions: ' + (data.allTransactions?.length || 0) + '\n' +
+                          'Total Spending: ₹' + (data.summary?.totalSpending || 0));
+                } else {
+                    alert('❌ Connection failed!\n\n' +
+                          'Status: ' + response.status + '\n' +
+                          'Error: ' + response.statusText + '\n\n' +
+                          'Your n8n workflow may not be active.');
+                }
+            } catch (error) {
+                alert('❌ Connection error!\n\n' +
+                      'Error: ' + error.message + '\n\n' +
+                      'Possible causes:\n' +
+                      '1. n8n workflow not active\n' +
+                      '2. Network blocking Railway\n' +
+                      '3. CORS issue\n' +
+                      '4. No internet connection\n\n' +
+                      'Try:\n' +
+                      '- Switch WiFi/Mobile data\n' +
+                      '- Check n8n is active\n' +
+                      '- Open n8n URL in browser');
+            }
+        }
+
+        async function submitManualEntry(event) {
+            event.preventDefault();
+            
+            const errorEl = document.getElementById('manualEntryError');
+            const successEl = document.getElementById('manualEntrySuccess');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Adding transaction...';
+            
+            // Show loading on main dashboard
+            const mainContainer = document.querySelector('.container');
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999;';
+            loadingOverlay.innerHTML = '<div style="background: white; padding: 30px; border-radius: 12px; text-align: center;"><div style="font-size: 2em; margin-bottom: 10px;">⏳</div><div style="font-size: 1.2em;">Adding transaction...</div></div>';
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                // Get form values
+                const message = document.getElementById('manual-message').value.trim();
+                const source = document.getElementById('manual-source').value || undefined;
+                
+                if (!message) {
+                    throw new Error('Please enter a transaction message');
+                }
+                
+                // Send to n8n webhook (same format as WhatsApp)
+                const webhookUrl = DATA_ENDPOINT.replace('/dashboard-data', '/whatsapp');
+                
+                console.log('📤 Submitting to:', webhookUrl);
+                console.log('💬 Message:', message);
+                if (source) console.log('🏦 Manual source:', source);
+                
+                const payload = {
+                    message: message,
+                    manualEntry: true
+                };
+                
+                // Add source if specified
+                if (source) {
+                    payload.source = source;
+                }
+                
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    successEl.textContent = '✅ Transaction added successfully! Refreshing dashboard...';
+                    successEl.style.display = 'block';
+                    
+                    // Wait 3 seconds for sheet to update, then close and refresh
+                    setTimeout(() => {
+                        document.getElementById('loadingOverlay')?.remove();
+                        closeManualEntryModal();
+                        
+                        // Show loading message on dashboard
+                        document.getElementById('app').innerHTML = '<div class="loading">Refreshing your budget data...</div>';
+                        
+                        // Reload data with another small delay
+                        setTimeout(() => {
+                            loadData();
+                        }, 1000);
+                    }, 3000);
+                } else {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('Error submitting manual entry:', error);
+                document.getElementById('loadingOverlay')?.remove();
+                errorEl.textContent = '❌ Failed to add transaction. Error: ' + error.message;
+                errorEl.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Add Transaction';
+            }
+        }
+
+        // Load data on page load
+        loadData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
